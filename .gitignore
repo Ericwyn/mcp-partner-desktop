@@ -15,6 +15,7 @@ dist-ssr/
 
 # Frontend
 frontend/
+mcp-partner/
 
 # Local files
 *.local

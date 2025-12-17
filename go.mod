@@ -4,7 +4,10 @@ go 1.22.0
 
 toolchain go1.22.5
 
-require github.com/wailsapp/wails/v2 v2.11.0
+require (
+	github.com/Ericwyn/pancors v0.1.1-0.20251217100154-a51a64821115
+	github.com/wailsapp/wails/v2 v2.11.0
+)
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect

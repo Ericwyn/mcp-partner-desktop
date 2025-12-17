@@ -1,8 +1,9 @@
 {
   "name": "mcp-partner",
   "outputfilename": "mcp-partner",
-  "assetdir": "frontend/dist",
-  "wailsjsdir": "frontend/src",
+  "frontend:dir": "mcp-partner",
+  "assetdir": "mcp-partner/dist",
+  "wailsjsdir": "mcp-partner/src",
   "frontend:install": "npm install",
   "frontend:build": "npm run build",
   "author": {

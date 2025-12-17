@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/Ericwyn/pancors"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -13,17 +14,17 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
-//go:embed frontend/dist
+//go:embed mcp-partner/dist
 var assets embed.FS
 
-//go:embed frontend/public/icon.svg
+//go:embed mcp-partner/public/icon.svg
 var icon []byte
 
 var debug = flag.Bool("debug", false, "Enable debug mode")
 
 func main() {
 	go func() {
-
+		pancors.RunPancorsServ(":36875")
 	}()
 
 	flag.Parse()
