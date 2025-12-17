@@ -28,6 +28,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
           ls -la ./mcp-partner  # 验证克隆（可选，调试用）
         shell: bash
       - uses: dAppServer/wails-build-action@main
@@ -57,6 +58,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
         shell: bash
       - uses: dAppServer/wails-build-action@main
         id: build-ubuntu2204
@@ -85,6 +87,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
         shell: bash
       - uses: dAppServer/wails-build-action@main
         id: build-ubuntu2004
@@ -113,6 +116,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
         shell: bash
       - uses: dAppServer/wails-build-action@main
         id: build-ubuntu-obfuscate
@@ -145,6 +149,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
         shell: bash
       - uses: dAppServer/wails-build-action@main
         id: build-macos15arm64
@@ -182,6 +187,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
         shell: bash
       - uses: dAppServer/wails-build-action@main
         id: build-macos14arm64
@@ -219,6 +225,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
         shell: bash
       - uses: dAppServer/wails-build-action@main
         id: build-macos13amd64
@@ -256,6 +263,7 @@ jobs:
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
         shell: bash
       - uses: dAppServer/wails-build-action@main
         id: build-macos-obfuscate
@@ -288,6 +296,7 @@ jobs:
         shell: bash
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
       - uses: dAppServer/wails-build-action@main
         id: build-windows2025
         with:
@@ -318,6 +327,7 @@ jobs:
         shell: bash
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
       - uses: dAppServer/wails-build-action@main
         id: build-windows2022
         with:
@@ -348,6 +358,7 @@ jobs:
         shell: bash
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
       - uses: dAppServer/wails-build-action@main
         id: build-windows2019
         with:
@@ -378,6 +389,7 @@ jobs:
         shell: bash
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
       - uses: dAppServer/wails-build-action@main
         id: build-windows-nsis
         with:
@@ -409,6 +421,7 @@ jobs:
         shell: bash
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+          rm -rf ./mcp-partner/node_modules ./mcp-partner/package-lock.json
       - uses: dAppServer/wails-build-action@main
         id: build-windows-obfuscate
         with:
