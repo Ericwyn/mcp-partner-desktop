@@ -1,114 +1,429 @@
-name: Wails Build & Release
+name: CI
 
-# 触发条件：所有push + Release发布
 on:
+  # 保留官方触发条件：指定分支的push、PR、手动触发
   push:
-    branches: ['*']  # 所有分支push触发编译
-    tags: ['*']      # 兼容tag推送
+    branches: [ "main", "v2", "v3", "dev", "*-*" ]
+  pull_request:
+    branches: [ "main", "v2", "v3", "dev", "*-*" ]
+  workflow_dispatch:
+  # 新增：Release正式发布时触发（用于编译+上传产物）
   release:
-    types: [published]  # Release正式发布时触发编译+上传
+    types: [published]
 
+# 全局环境变量（解决OOM、统一Wails版本）
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
-  WAILS_VERSION: "v2.8.0"  # 指定Wails版本（可根据需求调整）
+  WAILS_VERSION: "v2.11.0"  # 统一官方指定的Wails版本
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        build:
-          - name: Linux
-            platform: linux/amd64
-            os: ubuntu-latest
-            output_name: app-linux-amd64
-            build_flags: ""
-          - name: Windows
-            platform: windows/amd64
-            os: windows-latest
-            output_name: app-windows-amd64.exe
-            build_flags: ""
-          - name: macOS
-            platform: darwin/universal
-            os: macos-latest
-            output_name: app-macos-universal
-            build_flags: "-universal"
-
-    runs-on: ${{ matrix.build.os }}
+  # ===================== Linux 系列 =====================
+  ubuntu2404:
+    runs-on: ubuntu-24.04
     steps:
-      # 1. 检出主项目（最新v4版本）
-      - name: Checkout main project
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-          path: .
-
-      # 2. 克隆mcp-partner依赖
+      # 新增：克隆mcp-partner到项目根目录（官方步骤后、构建前）
       - name: Clone mcp-partner repository
         run: |
           git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
-          ls -la ./mcp-partner
+          ls -la ./mcp-partner  # 验证克隆（可选，调试用）
         shell: bash
-
-      # 3. 安装Go（最新稳定版，匹配Wails要求）
-      - name: Set up Go
-        uses: actions/setup-go@v5  # 升级到v5（最新版）
+      - uses: dAppServer/wails-build-action@main
+        id: build-ubuntu2404  # 新增ID，用于后续定位产物
         with:
-          go-version: '1.22'
-          cache: true  # 开启Go模块缓存，加速构建
-
-      # 4. 安装Node.js（Wails前端构建依赖）
-      - name: Set up Node.js
-        uses: actions/setup-node@v4  # 升级到v4（最新版）
-        with:
-          node-version: '20'  # LTS版本，兼容大多数项目
-          cache: 'npm'  # 开启npm缓存
-
-      # 5. 安装Wails CLI（手动安装，避免第三方Action依赖）
-      - name: Install Wails CLI
-        run: |
-          go install github.com/wailsapp/wails/v2/cmd/wails@${{ env.WAILS_VERSION }}
-          wails version
-        shell: bash
-
-      # 6. 安装系统依赖（不同平台按需安装）
-      - name: Install system dependencies (Linux)
-        if: matrix.build.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-        shell: bash
-
-      - name: Install system dependencies (macOS)
-        if: matrix.build.os == 'macos-latest'
-        run: |
-          brew install webkit2gtk
-        shell: bash
-
-      # 7. 构建Wails应用（核心步骤，手动执行）
-      - name: Build Wails application
-        run: |
-          # 前端依赖安装
-          npm install
-          # Wails构建（指定输出名称和平台）
-          wails build -platform ${{ matrix.build.platform }} -output ./build/${{ matrix.build.output_name }} ${{ matrix.build.build_flags }}
-        shell: bash
-        working-directory: .
-
-      # 8. 上传构建产物为Artifact（可选，方便查看push后的编译结果）
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4  # 升级到v4（最新版，解决报错核心）
-        with:
-          name: ${{ matrix.build.output_name }}
-          path: ./build/${{ matrix.build.output_name }}
-          retention-days: 7  # 产物保留7天（可选）
-
-      # 9. 上传产物到GitHub Release（仅Release发布时执行）
-      - name: Upload to GitHub Release
+          build-name: wails
+          build-platform: linux/amd64
+          wails-build-webview2: "embed"
+          package: false # 保持官方配置：不自动上传
+      # 新增：Release发布时，上传该产物到GitHub Release
+      - name: Upload to Release (ubuntu2404)
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
         with:
-          files: ./build/${{ matrix.build.output_name }}
+          files: ${{ steps.build-ubuntu2404.outputs.build-output-dir }}/wails
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          overwrite: true  # 覆盖同名产物（可选）
+          overwrite: true
+
+  ubuntu2204:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+        shell: bash
+      - uses: dAppServer/wails-build-action@main
+        id: build-ubuntu2204
+        with:
+          build-name: wails
+          build-platform: linux/amd64
+          wails-build-webview2: "embed"
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (ubuntu2204)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-ubuntu2204.outputs.build-output-dir }}/wails
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+
+  ubuntu2004:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+        shell: bash
+      - uses: dAppServer/wails-build-action@main
+        id: build-ubuntu2004
+        with:
+          build-name: wails
+          build-platform: linux/amd64
+          wails-build-webview2: "embed"
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (ubuntu2004)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-ubuntu2004.outputs.build-output-dir }}/wails
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+
+  ubuntu-obfuscate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+        shell: bash
+      - uses: dAppServer/wails-build-action@main
+        id: build-ubuntu-obfuscate
+        with:
+          build-name: wails
+          build-platform: linux/amd64
+          wails-build-webview2: "embed"
+          build-obfuscate: true
+          package: false
+      # 新增：Release上传（混淆版）
+      - name: Upload to Release (ubuntu-obfuscate)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-ubuntu-obfuscate.outputs.build-output-dir }}/wails
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          # 重命名产物，区分混淆版
+          file_name: wails-linux-obfuscate
+
+  # ===================== macOS 系列 =====================
+  macos15arm64:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+        shell: bash
+      - uses: dAppServer/wails-build-action@main
+        id: build-macos15arm64
+        with:
+          build-name: wails
+          build-platform: darwin/universal
+          sign: "false"
+          wails-version: ${{ env.WAILS_VERSION }}  # 复用全局变量
+          sign-macos-apple-password: ${{ secrets.APPLE_PASSWORD }}
+          sign-macos-app-id: "Developer ID Application: Lethean LTD (W2DNA5L5DY)"
+          sign-macos-app-cert: ${{ secrets.MAC_DEVELOPER_CERT }}
+          sign-macos-app-cert-password: ${{ secrets.MAC_DEVELOPER_PASS }}
+          sign-macos-installer-id: "Developer ID Installer: Lethean LTD (W2DNA5L5DY)"
+          sign-macos-installer-cert: ${{ secrets.MAC_DEVELOPER_INSTALL_CERT }}
+          sign-macos-installer-cert-password: ${{ secrets.MAC_DEVELOPER_INSTALL_PASS }}
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (macos15arm64)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-macos15arm64.outputs.build-output-dir }}/wails
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-macos15-universal
+
+  macos14arm64:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+        shell: bash
+      - uses: dAppServer/wails-build-action@main
+        id: build-macos14arm64
+        with:
+          build-name: wails
+          build-platform: darwin/universal
+          sign: "false"
+          wails-version: ${{ env.WAILS_VERSION }}
+          sign-macos-apple-password: ${{ secrets.APPLE_PASSWORD }}
+          sign-macos-app-id: "Developer ID Application: Lethean LTD (W2DNA5L5DY)"
+          sign-macos-app-cert: ${{ secrets.MAC_DEVELOPER_CERT }}
+          sign-macos-app-cert-password: ${{ secrets.MAC_DEVELOPER_PASS }}
+          sign-macos-installer-id: "Developer ID Installer: Lethean LTD (W2DNA5L5DY)"
+          sign-macos-installer-cert: ${{ secrets.MAC_DEVELOPER_INSTALL_CERT }}
+          sign-macos-installer-cert-password: ${{ secrets.MAC_DEVELOPER_INSTALL_PASS }}
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (macos14arm64)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-macos14arm64.outputs.build-output-dir }}/wails
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-macos14-universal
+
+  macos13amd64:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+        shell: bash
+      - uses: dAppServer/wails-build-action@main
+        id: build-macos13amd64
+        with:
+          build-name: wails
+          build-platform: darwin/universal
+          sign: "false"
+          wails-version: ${{ env.WAILS_VERSION }}
+          sign-macos-apple-password: ${{ secrets.APPLE_PASSWORD }}
+          sign-macos-app-id: "Developer ID Application: Lethean LTD (W2DNA5L5DY)"
+          sign-macos-app-cert: ${{ secrets.MAC_DEVELOPER_CERT }}
+          sign-macos-app-cert-password: ${{ secrets.MAC_DEVELOPER_PASS }}
+          sign-macos-installer-id: "Developer ID Installer: Lethean LTD (W2DNA5L5DY)"
+          sign-macos-installer-cert: ${{ secrets.MAC_DEVELOPER_INSTALL_CERT }}
+          sign-macos-installer-cert-password: ${{ secrets.MAC_DEVELOPER_INSTALL_PASS }}
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (macos13amd64)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-macos13amd64.outputs.build-output-dir }}/wails
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-macos13-universal
+
+  macos-obfuscate:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+        shell: bash
+      - uses: dAppServer/wails-build-action@main
+        id: build-macos-obfuscate
+        with:
+          build-name: wails
+          build-platform: darwin/universal
+          build-obfuscate: true
+          wails-version: ${{ env.WAILS_VERSION }}
+          package: false
+      # 新增：Release上传（混淆版）
+      - name: Upload to Release (macos-obfuscate)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-macos-obfuscate.outputs.build-output-dir }}/wails
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-macos-obfuscate
+
+  # ===================== Windows 系列 =====================
+  windows2025:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner（Windows兼容bash）
+      - name: Clone mcp-partner repository
+        shell: bash
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+      - uses: dAppServer/wails-build-action@main
+        id: build-windows2025
+        with:
+          build-name: wails.exe
+          build-platform: windows/amd64
+          wails-build-webview2: "embed"
+          nsis: 'false'
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (windows2025)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-windows2025.outputs.build-output-dir }}/wails.exe
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-windows2025.exe
+
+  windows2022:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        shell: bash
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+      - uses: dAppServer/wails-build-action@main
+        id: build-windows2022
+        with:
+          build-name: wails.exe
+          build-platform: windows/amd64
+          wails-build-webview2: "embed"
+          nsis: 'false'
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (windows2022)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-windows2022.outputs.build-output-dir }}/wails.exe
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-windows2022.exe
+
+  windows2019:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        shell: bash
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+      - uses: dAppServer/wails-build-action@main
+        id: build-windows2019
+        with:
+          build-name: wails.exe
+          build-platform: windows/amd64
+          wails-build-webview2: "embed"
+          nsis: 'false'
+          package: false
+      # 新增：Release上传
+      - name: Upload to Release (windows2019)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-windows2019.outputs.build-output-dir }}/wails.exe
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-windows2019.exe
+
+  windows-nsis:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        shell: bash
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+      - uses: dAppServer/wails-build-action@main
+        id: build-windows-nsis
+        with:
+          build-name: wails.exe
+          build-platform: windows/amd64
+          wails-build-webview2: "embed"
+          nsis: "true"
+          package: false
+      # 新增：Release上传（NSIS安装包）
+      - name: Upload to Release (windows-nsis)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          # NSIS产物默认在build目录下，后缀为.exe安装包
+          files: ${{ steps.build-windows-nsis.outputs.build-output-dir }}/*.exe
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-windows-installer.exe
+
+  windows-obfuscate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # 新增：克隆mcp-partner
+      - name: Clone mcp-partner repository
+        shell: bash
+        run: |
+          git clone https://github.com/Ericwyn/mcp-partner.git ./mcp-partner
+      - uses: dAppServer/wails-build-action@main
+        id: build-windows-obfuscate
+        with:
+          build-name: wails.exe
+          build-platform: windows/amd64
+          wails-build-webview2: "embed"
+          build-obfuscate: true
+          package: false
+      # 新增：Release上传（混淆版）
+      - name: Upload to Release (windows-obfuscate)
+        if: github.event_name == 'release' && github.event.action == 'published'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-windows-obfuscate.outputs.build-output-dir }}/wails.exe
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
+          file_name: wails-windows-obfuscate.exe
