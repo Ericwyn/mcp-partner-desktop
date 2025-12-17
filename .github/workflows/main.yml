@@ -35,29 +35,29 @@ jobs:
       - name: Rename build artifact (ubuntu2404)
         run: |
           SOURCE_FILE="build/bin/wails"
-          TARGET_NAME="wails-ubuntu2404-amd64"
+          TARGET_NAME="mcp-partner-ubuntu2404-amd64"
           cp "$SOURCE_FILE" "$TARGET_NAME"
         shell: bash
       - name: Upload build artifact to Archive (ubuntu2404)
         uses: actions/upload-artifact@v4
         with:
-          name: wails-ubuntu2404-amd64
-          path: wails-ubuntu2404-amd64
+          name: mcp-partner-ubuntu2404-amd64
+          path: mcp-partner-ubuntu2404-amd64
           retention-days: 7
       - name: Compress for Release (ubuntu2404)
         if: github.event_name == 'release' && github.event.action == 'published'
         run: |
-          zip "wails-ubuntu2404-amd64.zip" "wails-ubuntu2404-amd64"
+          zip "mcp-partner-ubuntu2404-amd64.zip" "mcp-partner-ubuntu2404-amd64"
         shell: bash
       - name: Upload to Release (ubuntu2404)
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
         with:
-          files: wails-ubuntu2404-amd64.zip
+          files: mcp-partner-ubuntu2404-amd64.zip
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           overwrite: true
-          file_name: wails-ubuntu2404-amd64.zip
+          file_name: mcp-partner-ubuntu2404-amd64.zip
 
   ubuntu2204:
     runs-on: ubuntu-22.04
@@ -80,29 +80,29 @@ jobs:
       - name: Rename build artifact (ubuntu2204)
         run: |
           SOURCE_FILE="build/bin/wails"
-          TARGET_NAME="wails-ubuntu2204-amd64"
+          TARGET_NAME="mcp-partner-ubuntu2204-amd64"
           cp "$SOURCE_FILE" "$TARGET_NAME"
         shell: bash
       - name: Upload build artifact to Archive (ubuntu2204)
         uses: actions/upload-artifact@v4
         with:
-          name: wails-ubuntu2204-amd64
-          path: wails-ubuntu2204-amd64
+          name: mcp-partner-ubuntu2204-amd64
+          path: mcp-partner-ubuntu2204-amd64
           retention-days: 7
       - name: Compress for Release (ubuntu2204)
         if: github.event_name == 'release' && github.event.action == 'published'
         run: |
-          zip "wails-ubuntu2204-amd64.zip" "wails-ubuntu2204-amd64"
+          zip "mcp-partner-ubuntu2204-amd64.zip" "mcp-partner-ubuntu2204-amd64"
         shell: bash
       - name: Upload to Release (ubuntu2204)
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
         with:
-          files: wails-ubuntu2204-amd64.zip
+          files: mcp-partner-ubuntu2204-amd64.zip
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           overwrite: true
-          file_name: wails-ubuntu2204-amd64.zip
+          file_name: mcp-partner-ubuntu2204-amd64.zip
 
   # macos15arm64:
   #   runs-on: macos-15
@@ -232,29 +232,29 @@ jobs:
       - name: Rename build artifact (windows2025)
         run: |
           SOURCE_FILE="build/bin/wails.exe"
-          TARGET_NAME="wails-windows2025-amd64.exe"
+          TARGET_NAME="mcp-partner-windows2025-amd64.exe"
           cp "$SOURCE_FILE" "$TARGET_NAME"
         shell: bash
       - name: Upload build artifact to Archive (windows2025)
         uses: actions/upload-artifact@v4
         with:
-          name: wails-windows2025-amd64
-          path: wails-windows2025-amd64.exe
+          name: mcp-partner-windows2025-amd64
+          path: mcp-partner-windows2025-amd64.exe
           retention-days: 7
       - name: Compress for Release (windows2025)
         if: github.event_name == 'release' && github.event.action == 'published'
         run: |
-          pwsh -Command "Compress-Archive -Path 'wails-windows2025-amd64.exe' -DestinationPath 'wails-windows2025-amd64.exe.zip' -Force"
+          pwsh -Command "Compress-Archive -Path 'mcp-partner-windows2025-amd64.exe' -DestinationPath 'mcp-partner-windows2025-amd64.exe.zip' -Force"
         shell: bash
       - name: Upload to Release (windows2025)
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
         with:
-          files: wails-windows2025-amd64.exe.zip
+          files: mcp-partner-windows2025-amd64.exe.zip
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           overwrite: true
-          file_name: wails-windows2025-amd64.exe.zip
+          file_name: mcp-partner-windows2025-amd64.exe.zip
 
   windows2022:
     runs-on: windows-2022
@@ -278,29 +278,29 @@ jobs:
       - name: Rename build artifact (windows2022)
         run: |
           SOURCE_FILE="build/bin/wails.exe"
-          TARGET_NAME="wails-windows2022-amd64.exe"
+          TARGET_NAME="mcp-partner-windows2022-amd64.exe"
           cp "$SOURCE_FILE" "$TARGET_NAME"
         shell: bash
       - name: Upload build artifact to Archive (windows2022)
         uses: actions/upload-artifact@v4
         with:
-          name: wails-windows2022-amd64
-          path: wails-windows2022-amd64.exe
+          name: mcp-partner-windows2022-amd64
+          path: mcp-partner-windows2022-amd64.exe
           retention-days: 7
       - name: Compress for Release (windows2022)
         if: github.event_name == 'release' && github.event.action == 'published'
         run: |
-          pwsh -Command "Compress-Archive -Path 'wails-windows2022-amd64.exe' -DestinationPath 'wails-windows2022-amd64.exe.zip' -Force"
+          pwsh -Command "Compress-Archive -Path 'mcp-partner-windows2022-amd64.exe' -DestinationPath 'mcp-partner-windows2022-amd64.exe.zip' -Force"
         shell: bash
       - name: Upload to Release (windows2022)
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
         with:
-          files: wails-windows2022-amd64.exe.zip
+          files: mcp-partner-windows2022-amd64.exe.zip
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           overwrite: true
-          file_name: wails-windows2022-amd64.exe.zip
+          file_name: mcp-partner-windows2022-amd64.exe.zip
 
   windows2019:
     runs-on: windows-2019
@@ -324,29 +324,29 @@ jobs:
       - name: Rename build artifact (windows2019)
         run: |
           SOURCE_FILE="build/bin/wails.exe"
-          TARGET_NAME="wails-windows2019-amd64.exe"
+          TARGET_NAME="mcp-partner-windows2019-amd64.exe"
           cp "$SOURCE_FILE" "$TARGET_NAME"
         shell: bash
       - name: Upload build artifact to Archive (windows2019)
         uses: actions/upload-artifact@v4
         with:
-          name: wails-windows2019-amd64
-          path: wails-windows2019-amd64.exe
+          name: mcp-partner-windows2019-amd64
+          path: mcp-partner-windows2019-amd64.exe
           retention-days: 7
       - name: Compress for Release (windows2019)
         if: github.event_name == 'release' && github.event.action == 'published'
         run: |
-          pwsh -Command "Compress-Archive -Path 'wails-windows2019-amd64.exe' -DestinationPath 'wails-windows2019-amd64.exe.zip' -Force"
+          pwsh -Command "Compress-Archive -Path 'mcp-partner-windows2019-amd64.exe' -DestinationPath 'mcp-partner-windows2019-amd64.exe.zip' -Force"
         shell: bash
       - name: Upload to Release (windows2019)
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
         with:
-          files: wails-windows2019-amd64.exe.zip
+          files: mcp-partner-windows2019-amd64.exe.zip
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           overwrite: true
-          file_name: wails-windows2019-amd64.exe.zip
+          file_name: mcp-partner-windows2019-amd64.exe.zip
 
   windows-nsis:
     runs-on: windows-2022
@@ -370,26 +370,26 @@ jobs:
       - name: Rename build artifact (windows-nsis)
         run: |
           SOURCE_FILE=$(ls ${{ steps.build-windows-nsis.outputs.build-output-dir }}/*.exe | grep -v wails.exe | head -n1)
-          TARGET_NAME="wails-windows-installer.exe"
+          TARGET_NAME="mcp-partner-windows-installer.exe"
           cp "$SOURCE_FILE" "$TARGET_NAME"
         shell: bash
       - name: Upload build artifact to Archive (windows-nsis)
         uses: actions/upload-artifact@v4
         with:
-          name: wails-windows-installer
-          path: wails-windows-installer.exe
+          name: mcp-partner-windows-installer
+          path: mcp-partner-windows-installer.exe
           retention-days: 7
       - name: Compress for Release (windows-nsis)
         if: github.event_name == 'release' && github.event.action == 'published'
         run: |
-          pwsh -Command "Compress-Archive -Path 'wails-windows-installer.exe' -DestinationPath 'wails-windows-installer.exe.zip' -Force"
+          pwsh -Command "Compress-Archive -Path 'mcp-partner-windows-installer.exe' -DestinationPath 'mcp-partner-windows-installer.exe.zip' -Force"
         shell: bash
       - name: Upload to Release (windows-nsis)
         if: github.event_name == 'release' && github.event.action == 'published'
         uses: softprops/action-gh-release@v2
         with:
-          files: wails-windows-installer.exe.zip
+          files: mcp-partner-windows-installer.exe.zip
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           overwrite: true
-          file_name: wails-windows-installer.exe.zip
+          file_name: mcp-partner-windows-installer.exe.zip
