@@ -63,17 +63,17 @@ jobs:
             os: windows-2022
             platform: windows/amd64
             nsis: 'true'
-            binary_name: installer # 逻辑占位符，会在脚本中特殊处理
+            binary_name: installer
             artifact_name: mcp-partner-windows-installer.exe
 
-          # MacOS (Future placeholders - uncomment to add to matrix)
-          # - id: macos15arm64
-          #   os: macos-15
-          #   platform: darwin/universal
-          #   nsis: 'false'
-          #   binary_name: wails
-          #   artifact_name: wails-macos15-universal
-          #   # Note: MacOS signing logic needs conditional steps or specific handling
+          # MacOS Build (Universal: Arm64 + Amd64)
+          - id: macos-universal
+            os: macos-latest
+            platform: darwin/universal
+            nsis: 'false'
+            binary_name: wails
+            # 最终生成的构件名称，加上 .app 后缀以便系统识别
+            artifact_name: mcp-partner-macos-universal.app
 
     steps:
       - uses: actions/checkout@v4
@@ -94,24 +94,30 @@ jobs:
           wails-build-webview2: "embed"
           nsis: ${{ matrix.nsis }}
           package: false
-          # Mac signing secrets can be passed conditionally or universally (empty vars are ignored by some actions,
-          # but best to check the action docs if enabling macos later)
+          # MacOS 签名配置 (目前设为 false，如需签名需配置 secrets)
+          sign: "false"
 
       - name: Rename build artifact
         shell: bash
         run: |
           TARGET_NAME="${{ matrix.artifact_name }}"
           
-          if [ "${{ matrix.nsis }}" == "true" ]; then
-            # NSIS 构建生成的 exe 名字是不确定的，原来的逻辑是查找不叫 wails.exe 的那个文件
+          if [ "${{ runner.os }}" == "macOS" ]; then
+            # MacOS 逻辑: 查找生成的 .app 文件夹
+            # Wails 在 darwin 平台通常生成一个 .app bundle
+            SOURCE_FILE=$(find build/bin -type d -name "*.app" | head -n1)
+            echo "Found MacOS Bundle: $SOURCE_FILE"
+          elif [ "${{ matrix.nsis }}" == "true" ]; then
+            # Windows NSIS 逻辑
             SOURCE_FILE=$(ls ${{ steps.build-wails.outputs.build-output-dir }}/*.exe | grep -v wails.exe | head -n1)
           else
-            # 标准构建
+            # 标准 Linux/Windows 单文件逻辑
             SOURCE_FILE="build/bin/${{ matrix.binary_name }}"
           fi
           
           echo "Copying $SOURCE_FILE to $TARGET_NAME"
-          cp "$SOURCE_FILE" "$TARGET_NAME"
+          # 使用 -r 以支持 macOS .app 文件夹的复制
+          cp -r "$SOURCE_FILE" "$TARGET_NAME"
 
       - name: Upload build artifact to Archive
         uses: actions/upload-artifact@v4
@@ -121,12 +127,14 @@ jobs:
           retention-days: 7
 
       # Compression - Unified Logic
-      # Linux uses 'zip', Windows uses 'Compress-Archive' (PowerShell)
 
-      - name: Compress for Release (Linux)
-        if: github.event_name == 'release' && github.event.action == 'published' && runner.os == 'Linux'
+      - name: Compress for Release (Linux & MacOS)
+        # 修改：同时匹配 Linux 和 macOS
+        if: github.event_name == 'release' && github.event.action == 'published' && (runner.os == 'Linux' || runner.os == 'macOS')
         run: |
-          zip "${{ matrix.artifact_name }}.zip" "${{ matrix.artifact_name }}"
+          # 如果是 macOS .app 文件夹，zip 会递归压缩保留目录结构
+          # -r 参数确保递归压缩文件夹
+          zip -r "${{ matrix.artifact_name }}.zip" "${{ matrix.artifact_name }}"
         shell: bash
 
       - name: Compress for Release (Windows)
