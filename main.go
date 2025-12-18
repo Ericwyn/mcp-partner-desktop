@@ -17,10 +17,10 @@ import (
 //go:embed mcp-partner/dist
 var assets embed.FS
 
-//go:embed mcp-partner/public/icon.svg
-var icon []byte
+//go:embed mcp-partner/public
+var iconAssets embed.FS
 
-var debug = flag.Bool("debug", false, "Enable debug mode")
+const DeskVersion = "v0.0.1"
 
 func main() {
 	go func() {
@@ -29,18 +29,32 @@ func main() {
 
 	flag.Parse()
 
+	// 在启动前设置环境变量，尝试禁用硬件加速来验证是否是渲染引擎问题
+	//os.Setenv("WEBKIT_DISABLE_COMPOSITING_MODE", "1")
+
 	// Create an instance of the app structure
 	app := NewApp()
 
+	//// ---------------------- 新增菜单逻辑开始 ----------------------
+	//appMenu := menu.NewMenu()
+	//
+	//toolsMenu := appMenu.AddSubmenu("Help")
+	//toolsMenu.AddText("Press Ctrl/Cmd+Shift+F12 Open devtools", nil, nil)
+	//toolsMenu.AddText("Version: "+DeskVersion, nil, nil)
+	//// 添加分割线
+	//toolsMenu.AddSeparator()
+
+	// ---------------------- 新增菜单逻辑结束 ----------------------
+
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:             "mcp-partner",
-		Width:             1280,
-		Height:            800,
-		MinWidth:          1024,
-		MinHeight:         768,
-		MaxWidth:          1280,
-		MaxHeight:         800,
+		Title:     "mcp-partner",
+		Width:     1400,
+		Height:    900,
+		MinWidth:  1024,
+		MinHeight: 768,
+		//MaxWidth:          1480,
+		//MaxHeight:         800,
 		DisableResize:     false,
 		Fullscreen:        false,
 		Frameless:         false,
@@ -61,6 +75,7 @@ func main() {
 		},
 		Linux: &linux.Options{
 			ProgramName: "mcp-partner",
+			Icon:        readIconBytes("mcp-partner/public/icon_128px.png"),
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{
@@ -86,15 +101,23 @@ func main() {
 			About: &mac.AboutInfo{
 				Title:   "mcp-partner",
 				Message: "",
-				Icon:    icon,
+				Icon:    readIconBytes("mcp-partner/public/icon_128px.png"),
 			},
 		},
 		Debug: options.Debug{
-			OpenInspectorOnStartup: true,
+			OpenInspectorOnStartup: false,
 		},
 	})
 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func readIconBytes(iconNameFile string) []byte {
+	iconBytes, err := iconAssets.ReadFile(iconNameFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return iconBytes
 }
